@@ -76,6 +76,7 @@
         /* 예시 이미지 오버레이 스타일 */
         #exampleOverlay {
             display: none;
+            /* 처음에는 숨겨진 상태 */
             position: fixed;
             top: 0;
             left: 0;
@@ -114,8 +115,8 @@
         <div id="idDisplay">ID: (Not generated)</div>
     </div>
 
-    <!-- 예시 이미지 오버레이 -->
-    <div id="exampleOverlay">
+    <!-- 예시 이미지 오버레이 (처음에는 display: none) -->
+    <div id="exampleOverlay" style="display: none;">
         <img id="exampleImg" src="Artwork_NFT-4660.png" alt="Example Artwork">
         <button id="closeExampleBtn" class="btn">나가기</button>
     </div>
