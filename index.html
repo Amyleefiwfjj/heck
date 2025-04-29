@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Elegant NFT Watercolor Brush + Frame + Image Upload</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px 25px;
+            border-radius: 20px;
+            box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .btn {
+            all: unset;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0px 4px 8px rgba(108, 92, 231, 0.3);
+        }
+
+        .btn:hover {
+            background: linear-gradient(90deg, #a29bfe, #6c5ce7);
+            transform: translateY(-2px);
+            box-shadow: 0px 6px 12px rgba(108, 92, 231, 0.4);
+        }
+
+        .file-label {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-label input[type="file"] {
+            position: absolute;
+            top: 0;
+            right: 0;
+            opacity: 0;
+            font-size: 100px;
+            cursor: pointer;
+        }
+
+        #idDisplay {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+            margin-top: 5px;
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ui-panel">
+        <label class="file-label btn">
+            Upload Image
+            <input type="file" id="fileUploader" accept="image/*">
+        </label>
+        <button id="addFrameBtn" class="btn">Add Frame</button>
+        <button id="generateIdBtn" class="btn">Generate NFT ID</button>
+        <button id="saveBtn" class="btn">Save Artwork</button>
+        <button id="clearBtn" class="btn">Clear Canvas</button>
+        <div id="idDisplay">ID: (Not generated)</div>
+    </div>
+
+    <script>
+        let nftID = '';
+        let img;
+        let borderImg;
+        let frameAdded = false;
+        let noiseSeedX, noiseSeedY;
+        let imgUploaded = false;
+
+        function preload() {
+            // 테두리 이미지 미리 로딩
+            borderImg = loadImage('55bae49e441675e56dd2be400d559140.png'); // 여기에 테두리 이미지 파일 경로!
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            background(255);
+
+            document.getElementById('fileUploader').addEventListener('change', handleFile);
+            document.getElementById('addFrameBtn').addEventListener('click', addFrame);
+            document.getElementById('generateIdBtn').addEventListener('click', generateNFTID);
+            document.getElementById('saveBtn').addEventListener('click', saveArtwork);
+            document.getElementById('clearBtn').addEventListener('click', clearCanvas);
+
+            noiseSeedX = random(1000);
+            noiseSeedY = random(1000);
+        }
+
+        function draw() {
+            if (imgUploaded && img) {
+                image(img, 0, 0, width, height); // 배경에 이미지 전체 깔기
+            }
+
+            if (frameAdded && imgUploaded) {
+                // 프레임 추가
+                image(borderImg, 0, 0, width, height);
+            }
+
+            if (mouseIsPressed && imgUploaded) {
+                let t = millis() * 0.0005;
+                let baseSize = 30;
+
+                let offsetX = (noise(noiseSeedX + t + mouseY * 0.005) - 0.5) * 50;
+                let offsetY = (noise(noiseSeedY + t + mouseX * 0.005) - 0.5) * 50;
+                let nSize = noise(noiseSeedX + t + 2000);
+                let brushSize = baseSize + nSize * 30;
+
+                let hueShift = (millis() * 0.01) % 360;
+
+                colorMode(HSL, 360, 100, 100, 100);
+
+                for (let i = 5; i > 0; i--) {
+                    let alphaValue = map(i, 5, 0, 30, 5);
+                    let sizeOffset = brushSize + i * 10;
+
+                    fill((hueShift + i * 5) % 360, 80, 60, alphaValue);
+                    noStroke();
+                    ellipse(mouseX + offsetX, mouseY + offsetY, sizeOffset, sizeOffset);
+                }
+            }
+
+            if (nftID !== '') {
+                fill(0);
+                textSize(16);
+                textAlign(LEFT);
+                text('Your NFT ID: ' + nftID, 50, height - 20);
+            }
+        }
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image')) {
+                img = loadImage(URL.createObjectURL(file), () => {
+                    image(img, 0, 0, width, height);
+                    imgUploaded = true;
+                    frameAdded = false;
+                });
+            } else {
+                img = null;
+                imgUploaded = false;
+                frameAdded = false;
+            }
+        }
+
+        function addFrame() {
+            if (imgUploaded) {
+                frameAdded = true;
+            }
+        }
+
+        function generateNFTID() {
+            const randomNum = floor(random(1000, 9999));
+            nftID = 'NFT-' + randomNum;
+            document.getElementById('idDisplay').innerText = `ID: ${nftID}`;
+        }
+
+        function saveArtwork() {
+            if (nftID) {
+                saveCanvas('Artwork_' + nftID, 'png');
+            } else {
+                saveCanvas('Artwork_Untitled', 'png');
+            }
+        }
+
+        function clearCanvas() {
+            background(255);
+            img = null;
+            imgUploaded = false;
+            frameAdded = false;
+            nftID = '';
+            document.getElementById('idDisplay').innerText = `ID: (Not generated)`;
+        }
+    </script>
+
+</body>
+
+</html>
